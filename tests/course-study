@@ -1,0 +1,1107 @@
+// ================= 🧠 Playwright Lecture 1 Summary =================
+// 🛒 1. The curly braces { test } are crucial for destructuring (picking only the 'test' tool from the '@playwright/test' library). Without them, JavaScript imports the whole module, which causes errors.
+// 🏎️ 2. 'async' and 'await' work together like a lock and key. If you use 'await' inside the function to pause steps, you must mark the outer function with 'async'.
+// ⏳ Use 'await' to force Playwright to wait for the current action to finish before moving to the next line.
+// 🏹 3. The arrow function syntax requires the fat arrow (=>), not just an equal sign (=).
+// ===================================================================
+// ================= 🧠 Playwright Lecture 2 Summary =================
+// 📦 1. Fixtures like { page } and { browser } are pre-configured tools provided by Playwright. They must be wrapped in curly braces so Playwright recognizes them.
+// 🌐 2. 'browser.newContext()' creates a fresh, isolated browser instance (like Incognito mode) to ensure tests don't share cookies or cache.
+// 🌐 'context': A completely isolated browser session (like a fresh Incognito window with its own cookies).
+// 📄 'page': A single tab opened inside that specific browser context.
+// ⚡ 3. Using the { page } fixture directly is a shortcut; Playwright automatically creates the browser and context behind the scenes, saving lines of code.
+// ===================================================================
+// ================= 🧠 My Personal Playwright Workflow Summary Lecture 3 =================
+// 1. 'npx playwright test' walks through node_modules and wakes Playwright up.
+// 2. Playwright navigates to the config file to check keys and values of configurations.
+// 3. Playwright runs the tests sequentially using both methods:
+//    A) Browser Context (Manual): Open Chrome (browser) -> Open an isolated window icnogito (context) -> Open a new tab (page) -> Navigate to website.
+//    B) Page (Automatic Shortcut): Go directly to page after automatically invoking browser and context in the background.
+// 4. Finally, results are returned in an HTML Report.
+// ==============================================================================
+// ================= 🧠 Playwright Lecture 4 Summary: Assertions & Cross-Browser =================
+// 🌐 1. CROSS-BROWSER TESTING: Simply changing 'browserName' in the config to 'firefox' or 'webkit' (Safari engine) shifts execution instantly without changing a line of test code.
+// 🎯 2. EXPECT & IMPORT: The 'expect' method acts as the test judge. It must be explicitly imported from '@playwright/test' along with 'test' using object destructuring.
+// ⚠️ NEVER forget 'await' before 'expect'!
+// ❌ No 'await' = JavaScript runs too fast and fails before the page even loads.
+// ✅ With 'await' = Playwright pauses and waits until the check is 100% done.// 🛠️ 4. CONFIG HEADLESS: Adding 'headless: false' inside the config's 'use' block permanently forces a visible browser runner, eliminating the need for '--headed' in the terminal.
+// ==============================================================================================
+// ==============================================================================
+// 🎯 HOW TO FIND ELEMENTS WHEN THE ID IS MISSING (BACKUP PLANS)
+// ==============================================================================
+
+// PLAN A: If the element HAS an ID (The Best Case)
+// HTML Example: <input id="user-email">
+//await page.locator('#user-email').fill('test@email.com');
+//Ex:await page.locator('#user-mobile')
+
+// PLAN B: If there is NO ID, but there is a CLASS
+// HTML Example: <div class="alert-danger">Invalid Password</div>
+// Note: We use a dot (.) before the class name
+//await page.locator('.alert-danger').isVisible();
+//Ex:await page.locator('.btn-submit-form').click();
+
+
+// PLAN C: If there is NO ID or Class, but there is another attribute (like name or type)
+// HTML Example: <input type="checkbox" name="remember-me-box">
+// Note: We use square brackets [attribute='value']
+//await page.locator("[name='remember-me-box']").click();
+//Ex:await page.locator("[name='backup-email']")
+
+
+// PLAN D: Parent to Child (Traversing)
+// When the input has absolutely nothing unique, but it lives inside a unique form.
+// HTML Example: <form id="login-card"> <input type="text"> </form>
+// Note: We use ( >> ) to look inside the parent element
+//await page.locator('#login-card >> input').fill('Hello');
+//Ex:<div id="main-nav" class="navbar-container">
+    //<a href="/dashboard">Home</a>
+    //<a href="/logout">Logout</a>
+//</div>:
+//await page.locator("#main-nav >> text='Logout'")
+
+
+// PLAN E: Using the Text on the screen
+// When you just want to click a button by the actual words written on it.
+// HTML Example: <button>Create Account</button>
+//await page.locator("text='Create Account'").click();
+
+// ==============================================================================
+// ==============================================================================
+// 🏆 CORE PLAYWRIGHT ADVANTAGES (MEMORIZE THESE BENEFITS) Lec 6
+// ==============================================================================
+
+// ⭐ 1. AUTO-WAITING (الانتظار التلقائي)
+// -> Playwright automatically waits for elements to be visible and ready.
+// -> You don't need to write manual sleeps or explicit waits like Selenium.
+// -> Default elements timeout is up to 30 seconds.
+
+// ⭐ 2. SMART ASSERTIONS (التأكيدات الذكية)
+// -> Assertions like 'expect().toContainText()' are web-first and intelligent.
+// -> They retry automatically for up to 5 seconds waiting for the text to appear.
+
+// ⭐ 3. FLEXIBLE CSS REGEX (مرونة السيليكتورز)
+// -> Supports operators like (*=) to match partial attribute values.
+// -> Helps avoid brittle selectors and protects your code from dynamic HTML changes.
+
+// ⭐ 4. CONTEXT-BASED LOCATORS (تحديد أرض الطيار)
+// -> Prefixes like 'page.locator()' ensure the agent searches inside the correct tab.
+// -> Keeps execution precise and light, even with multiple pages open.
+
+// ⏳ 1. AUTO-WAIT: Playwright waits automatically for elements (up to 30s). No manual sleeps!
+// 🎯 2. SMART EXPECT: Assertions retry automatically for 5s until text appears.
+// 🧩 3. FLEXIBLE CSS: Use '*=' for partial match to avoid broken selectors.
+// 📄 4. PAGE LOCATOR: 'page.locator()' searches only inside the open tab.
+// ==============================================================================
+// 🎯 LECTURE 7 COMPACT SUMMARY: DOM TRAVERSAL & TEXT EXTRACTION
+// ==============================================================================
+
+// ⭐ 1. HTML TAG IDENTIFICATION (معرفة التاج)
+// -> A Tag is always the FIRST word after the "<" symbol (e.g., div, h4, a, button).
+// -> Ignore inside attributes like class or id when identifying the tag name.
+
+// ⭐ 2. PARENT-CHILD CSS SELECTION (قاعدة المسافة السحرية)
+// -> Use a space to jump from a Parent to a Child (e.g., ".card-body a").
+// -> The space means: search inside this parent class for this specific child tag.
+
+// ⭐ 3. UNIVERSAL TEXT CONTENT (قاشط النصوص)
+// -> '.textContent()' extracts inner text from ANY matching tag (Error messages, product titles, etc.).
+// -> It doesn't care what the text means; it just grabs whatever is inside the tag sandwich.
+
+// ⭐ 4. MULTI-ELEMENT INDEXING (تحديد العنصر وسط الزحمة)
+// -> Playwright is strict; multiple elements matching one locator will crash with (Strict Mode Violation).
+// -> Fix it using: .first() [Index 0], .last() [Last Index], or .nth(index) [Zero-based index].
+// ==============================================================================
+// 🚨 LECTURE 8: THE ALL-TEXT-CONTENTS TRAP (فخ جلب كل النصوص)
+// ==============================================================================
+
+// 📱 1. GRABBING ALL TITLES (جلب كل النصوص مرة واحدة)
+// -> 'page.locator().allTextContents()' extracts text from ALL matching elements at once.
+// -> It returns the data as a JavaScript Array (e.g., ['iPhone', 'Samsung']).
+
+// ⚠️ 2. NO AUTO-WAITING TRAP (غياب الانتظار التلقائي)
+// -> CRITICAL: '.allTextContents()' does NOT auto-wait for elements to load!
+// -> If the page is still loading, it immediately returns an empty array [].
+// -> It will NOT throw a timeout error; the test passes but with zero results.
+
+// 🥊 3. 'textContent()' VS 'allTextContents()'
+// -> '.textContent()' (Single element) -> Auto-waits until attached to DOM.
+// -> '.allTextContents()' (Multiple elements) -> Does NOT wait at all.
+
+// 🛠️ 4. THE TEMPORARY FIX (الحل المؤقت لراهول)
+// -> Running '.first().waitFor()' before it forces Playwright to wait for the page.
+// -> Once the first element loads, all other elements are ready for '.allTextContents()'.
+
+// 🧠 THE GOLDEN RULE OF PLAYWRIGHT WAITING:LEC 8
+// ⚡ Auto-Wait Actions: Methods like .click() and .fill() wait automatically for elements to appear.
+// ❌ No Auto-Wait: .allTextContents() does NOT wait; it immediately grabs whatever is in the DOM (returns [] if empty).
+// 🛠️ The Fix: Always use .first().waitFor() before calling .allTextContents() to ensure data is fully loaded.
+
+/**
+ * 🚀 PLAYWRIGHT CORE UI ELEMENTS & DEBUGGING CHEATSHEET//LEC 9
+ * --------------------------------------------------------------------------------------
+ * 📌 1. STATIC DROPDOWNS (<select> tags)
+ * - Rule: Dropdown choices are hardcoded in HTML and don't change dynamically.
+ * - Practice: Store the locator using its specific class ('select.form-control') in a variable.
+ * - Example: 
+ * const dropDown = page.locator("select.form-control");
+ * await dropDown.selectOption("consult");
+ * * 🔘 2. CUSTOM RADIO BUTTONS & CHECKBOXES (Hidden Inputs vs. Visible Layers)
+ * - The Problem: Developers often hide the real <input> using CSS for modern styling.
+ * - Click Action: Always target the VISIBLE text/label layer (e.g., '.radiotextsty', '.chk-label').
+ * - Strict Mode / Duplicates: If text classes repeat, isolate using '.first()' or '.last()'.
+ * - Example: await page.locator(".radiotextsty").first().click();
+ * * 🧪 3. CHECK STATE ASSERTIONS (.toBeChecked())
+ * - Rule: State (checked/unchecked) lives inside the hidden <input>, NOT the text layer.
+ * - Strict Mode Fix: If 'id' is duplicated (e.g., '#usertype'), bypass it by targeting 
+ * a unique attribute like '[value="user"]' or '[value="admin"]'.
+ * - Example: await expect(page.locator("[value='admin']")).toBeChecked();
+ * * ⏸️ 4. DEBUGGING WITH PAUSE
+ * - Rule: Freezes execution completely and automatically opens the Playwright Inspector.
+ * - Best for: Inspecting elements on the fly and stepping through your code manually.
+ * - Code: await page.pause();
+ * * 💬 5. WEB POPUPS & MODALS (HTML-based)
+ * - Rule: These are standard HTML elements built into the webpage DOM (not OS alerts).
+ * - Handling: Treat them like regular elements; locate the "Okay" or "Close" button and click it.
+ * - Example: await page.locator("#okayBtn").click();
+ * --------------------------------------------------------------------------------------
+ *//**
+ * 📝 LECTURE Q&A SUMMARY CHEATSHEET
+ * --------------------------------------------------------------------------------------
+ * 📌 Q1 & Q2: How to handle static dropdowns using a variable and shorthand?
+ * - Code:
+ * const dropDown = page.locator("select.form-control");
+ * await dropDown.selectOption("consult");
+ * - Rule: No 'await' for defining locator. Shorthand checks both value and text automatically.
+ * * 🔘 Q3: How to click a custom radio button when the input is hidden?
+ * - Code: 
+ * await page.locator(".radiotextsty").click();
+ * - Rule: Always click the visible text layer/class (don't forget the dot '.' for classes).
+ * * 🧪 Q4: How to assert a state and bypass Strict Mode errors from duplicate IDs?
+ * - Code: 
+ * await expect(page.locator("[value='user']")).toBeChecked();
+ * - Rule: Target a unique attribute like [value='...'] instead of the duplicated ID.
+ * * ⏸️ Q5: How to freeze browser execution and open Playwright Inspector?
+ * - Code: 
+ * await page.pause();
+ * - Rule: Use this line anywhere to manually debug and inspect elements on the fly.
+ * * 💬 Q6: How to handle standard HTML-based web popups or modals?
+ * - Code: 
+ * await page.locator("#okayBtn").click();
+ * - Rule: Treat them as regular elements; just locate the button (using '#' for ID) and click.
+ * --------------------------------------------------------------------------------------
+ *//**
+ * 📝 PLAYWRIGHT SELECTORS CHEATSHEET (PART 2)
+ * --------------------------------------------------------------------------------------
+ * 🎯 1. Attribute Selectors & Strict Mode
+ * - HTML: <input type="text" name="query" class="search-bar">
+ * - Code: await page.locator("input[name='query']").fill("text");
+ * - Rule: Combine tag + [attribute='value'] to be specific and avoid Strict Mode errors.
+ * * 👁️ 2. Visible vs. Hidden Elements (Custom Radios/Checkboxes)
+ * - HTML: <input type="radio" style="display: none;"><label class="custom-radio-design">Male</label>
+ * - Code: await page.locator(".custom-radio-design").click();
+ * - Rule: Always click what the user sees on the screen. Do not click hidden inputs.
+ * * 🆔 3. Dropdowns (Select Elements)
+ * - HTML: <select id="account-type"><option value="business">Business</option></select>
+ * - Code: await page.locator("#account-type").selectOption("business");
+ * - Rule: Use '#' for ID selectors. Pass the option value directly inside .selectOption().
+ * --------------------------------------------------------------------------------------
+ */
+// STEP 1: Create a locator for the link.
+// We use [href*="value"] which means: find an element where the 'href' attribute CONTAINS this text.
+// This is better than 'class' because the link URL is unique and will not change easily.
+//const documentLink = page.locator('[href*="documents-request"]');
+
+// STEP 2: Verify that the text is blinking.
+// 'toHaveAttribute' takes two words: (1) The Attribute Name, (2) The Expected Value.
+// Here, we check if the attribute 'class' has the exact value 'blinkingText'.
+//await expect(documentLink).toHaveAttribute('class', 'blinkingText');
+
+// STEP 3: Verify how the link opens.
+// We look at the 'target' attribute. 
+// If the value is '_blank', it means the browser will open this link in a NEW TAB (Child Window).
+//await expect(documentLink).toHaveAttribute('target', '_blank');
+
+// STEP 4: Click the link.
+// This action triggers the browser to open the new tab.
+//await documentLink.click();
+
+// =================================================================================
+// 🚀 PLAYWRIGHT WORKFLOW & ASYNC CHEAT SHEET
+// =================================================================================
+
+/**
+ * 1. THE ASYNC/PROMISE LOGIC:
+ * - JavaScript is non-blocking. If we call click() and waitForEvent() separately,
+ * the test will likely finish or crash before the browser opens the new tab.
+ * * 2. THE PROMISE.ALL PATTERN:
+ * - We wrap multiple async actions in Promise.all() to run them in PARALLEL.
+ * - This acts as a synchronization point: JS waits until ALL promises are Fulfilled.
+ * - ALWAYS use 'await' before Promise.all(). If you miss it, you get:
+ * 'TypeError: object is not iterable' because you're treating the Promise as an array.
+ *
+ * 3. DESTRUCTURING [newPage]:
+ * - Promise.all returns an array of results.
+ * - context.waitForEvent() returns the new Page object (the first item).
+ * - documentsLink.click() returns 'undefined' (the second item).
+ * - [newPage] syntax extracts the first item only and ignores the rest.
+ */
+
+/* Example:
+const [newPage] = await Promise.all([
+    context.waitForEvent("page"), // Listener: returns the page object
+    documentsLink.click(),        // Trigger: returns undefined
+]);
+*/
+
+/**
+ * 4. CSS SELECTORS (THE DIFFERENCE):
+ * - .class1.class2 (No space): Intersection. Elements must have BOTH classes.
+ * - .parent .child (With space): Descendant. The child must be INSIDE the parent.
+ */
+
+// Locator Strategy:
+// We are using [href*='...'] which targets an HTML ATTRIBUTE (not a class).
+// An attribute is a property of the tag that defines its behavior (like href for links).
+// We prefer attributes like 'href' because they are specific to the element's 
+// functionality and usually stay consistent even if the CSS classes change.
+// =================================================================================
+/*
+========================================================================
+🔥 PLAYWRIGHT CHEAT SHEET: textContent vs. inputValue
+========================================================================
+
+1. .textContent()
+   - USE FOR: Static elements (<div>, <p>, <span>, <h1>, <a>).
+   - WHY: It reads the text physically written INSIDE the HTML tags.
+     Example HTML: <h1>Hello World</h1>
+   - EXAMPLE CODE:
+     const text = await page.locator("h1").textContent();
+     // Returns: "Hello World"
+
+2. .inputValue()
+   - USE FOR: Interactive fields (<input>, <textarea>, <select>).
+   - WHY: Text typed into inputs is stored in the 'value' property,
+     it is NOT considered static text inside the HTML tags.
+     Example HTML: <input type="text" value="Rahul">
+   - EXAMPLE CODE:
+     await page.locator("#username").fill("Rahul");
+     const val = await page.locator("#username").inputValue();
+     // Returns: "Rahul"
+
+GOLDEN RULE: If the browser is "holding" the value in a form field, 
+always use .inputValue(). If it's just "displayed" text on the page, 
+use .textContent().
+========================================================================
+*/
+// 1. هنا "بنكتب" (Interactive) -> فبنستخدم inputValue
+await page.locator("#username").fill("Ahmed");
+const name = await page.locator("#username").inputValue(); // القيمة "Ahmed"
+
+// 2. هنا الـ "خطأ" معروض بس (Displayed) -> فبنستخدم textContent
+const errorText = await page.locator(".error-message").textContent(); // القيمة "Invalid Password"
+# 🚀 The Ultimate Playwright Cheat Sheet (Review & Q&A)
+
+## 1. Core Concepts (الأساسيات)
+
+* **What is the primary purpose of the `test` function in Playwright?**
+    It defines a single test case. It groups your steps together and provides built-in tools (fixtures) like `page` and `browser` to use inside the test.
+
+* **Why is it important to use `await` when calling asynchronous functions?**
+    Because JavaScript does not wait for actions to finish by default. `await` forces the code to PAUSE until the action (like clicking or loading) is 100% complete before moving to the next line.
+
+* **What is the purpose of the line `browser.newContext();`?**
+    It creates a fresh, isolated browser session (like an Incognito window). It does not share cookies or cache with other tests.
+
+## 2. Navigation & Waiting (التنقل والانتظار)
+
+* **What describes the purpose of `await page.goto(...)`?**
+    It navigates the browser to a specific URL (website address).
+
+* **What does `await page.waitForLoadState('networkidle');` do?**
+    It waits until the network is quiet (no active API calls or loading resources for at least 500ms). This is very useful when a page loads data dynamically after opening.
+
+## 3. Handling Multiple Pages / Tabs (التعامل مع الصفحات المتعددة)
+
+* **How can you identify if a new page has successfully opened after clicking a link?**
+    By setting up a "listener" for the new page event using `context.waitForEvent('page')`.
+
+* **What is the purpose of `const [newPage] = await Promise.all([...]);`?**
+    It runs multiple actions AT THE SAME TIME (in parallel). 
+    - We MUST use it when clicking a link opens a new tab.
+    - It starts listening for the new page AND clicks the link simultaneously, so we don't miss the page opening.
+    - `[newPage]` extracts the new page object from the result so we can control the new tab.
+
+## 4. Locators & Finding Elements (البحث عن العناصر)
+
+* **CSS Selectors (Space vs. No Space):**
+    - `.class1.class2` (No Space): An element that has BOTH classes.
+    - `.parent .child` (With Space): A descendant. Looks for `.child` INSIDE `.parent`.
+
+* **What is the purpose of `page.locator(".card-body b").allTextContents()`?**
+    It finds ALL bold elements (`<b>`) that are inside elements with the class `.card-body`. Then, `allTextContents()` extracts the text from ALL of them and returns them as a JavaScript Array (e.g., `["Phone", "Laptop"]`).
+
+* **Handling Hidden Inputs (The Checkbox/Radio trick):**
+    Developers often hide the real `<input>` and display a custom `<span>` or `<label>`. 
+    - **Rule:** Never try to click a hidden `<input>`. Always use Playwright to click the VISIBLE layer (like the `span` or `label`).
+    - Example: `await page.locator('.customradio .radiotextsty').click();`
+
+## 5. Actions & Reading Data (التفاعل واستخراج البيانات)
+
+* **Which method is used to fill in the user's email in a form?**
+    The `.fill()` method. 
+    - Example: `await page.locator('#email').fill('test@test.com');`
+
+* **Reading Text: `textContent()` vs `inputValue()`**
+    - `textContent()`: Use this for static UI text (like `<div>`, `<p>`, `<h1>`). It reads the text physically written between the HTML tags.
+    - `inputValue()`: Use this for interactive fields (like `<input>`, `<textarea>`). It reads the dynamic value that a user typed into the box.
+
+## 6. Smart Locators (User-Facing Locators)
+Instead of complex CSS, use what the user sees:
+* `getByRole('button', { name: 'Submit' })`: Finds a button with the text "Submit".
+* `getByLabel('Username')`: Finds the input field associated with the "Username" label.
+* `getByText('Welcome back')`: Finds any element containing this exact text.
+
+
+/* ======================================================================================
+    💡 LEC 10 RAHUL'S SEQUENCE & LOGIC BREAKDOWN (Why did he write it this way?):
+    ======================================================================================
+    
+    1. THE SEQUENCE STRATEGY:
+       Instead of clicking blindly, we use a loop to inspect each product card one by one.
+       - Index 0 = First Product Box
+       - Index 1 = Second Product Box... and so on.
+
+    2. WHY DO WE REPEAT 'products.nth(i)' INSIDE THE LOOP?
+       Think of 'products.nth(i)' as a specific physical cardboard box on the shelf.
+       
+       - In the IF condition: We open Box(i) -> Look ONLY inside it for the text tag ("b") 
+         -> Read the name -> Check if it equals "ZARA COAT 3".
+         
+       - In the CLICK action: Once we find the match, we must return to that EXACT same 
+         Box(i) to click its own "Add To Cart" button. If we don't specify 'products.nth(i)' 
+         again, Playwright won't know WHICH box's button to click!
+
+    3. HOW AND WHY WE DO LOCATOR CHAINING (.nth(i).locator()):
+       Syntax: parentLocator.locator(childLocator)
+       
+       - WHY: If you search globally using 'page.locator("text=Add To Cart")', Playwright 
+         finds 8 identical buttons and throws a "Strict Mode Violation" error (it gets confused).
+         
+       - HOW IT FIXES IT: By chaining 'products.nth(i).locator(...)', we shrink the search universe.
+         We tell Playwright: "Ignore the whole website. Focus 100% inside Box(i) only. 
+         Find the button inside this isolated box and click it."
+         
+    4. THE POWER OF 'break':
+       Once the correct item is found and clicked, 'break' immediately stops the loop. 
+       This saves execution time so the test doesn't waste time checking the remaining boxes.
+    ======================================================================================
+    */
+
+    // FIXED: Changed comma to semicolon in the loop declaration
+    for (let i = 0; i < count; i++) 
+    {
+        // STEP A: Chain to read the title inside the current box (i)
+        if (await products.nth(i).locator("b").textContent() === productName) 
+        {
+            // STEP B: Chain to click the correct button inside the same matched box (i)
+            // FIXED: Removed the accidental dot after await
+            await products.nth(i).locator("text=Add To Cart").click(); 
+            
+            // STEP C: Exit early because our mission is complete!
+            break; 
+        }
+    }
+});
+/* 🎯 PLAYWRIGHT SYNCHRONIZATION: WHY WE WAIT FOR 'div li.first()'
+  =====================================================================
+  
+  1. THE HTML STRUCTURE LOGIC (Why the 'li' tag?):
+     - In web development, 'li' stands for "List Item". 
+     - E-commerce cart pages display products as a list inside a <ul> or <div> container.
+     - Each product card on the cart page is wrapped inside its own <li> tag, 
+       making 'li' the main parent container for every item in the cart.
+       
+  2. THE API LOADING BEHAVIOR (Why wait for it?):
+     - When the cart page opens, it is initially empty. It sends an API request to fetch your items.
+     - Once the server responds, Angular dynamically renders the <li> blocks on the screen.
+     - Therefore, waiting for the <li> to appear is the perfect confirmation that the page data has successfully loaded.
+
+  3. PREVENTING "STRICT MODE VIOLATION" (Why '.first()'?):
+     - If the cart contains multiple items, a global selector like page.locator("div li") 
+       will match multiple elements (e.g., 6 items found).
+     - Playwright's '.waitFor()' will throw a "Strict Mode Violation" error if it finds multiple matches.
+     - FIX: By chaining '.first()', we tell Playwright: "Just wait until the VERY FIRST row renders." 
+       Since all cart items load together from the same API call, if the first item is ready, 
+       the whole list is ready!
+
+  THE CODE FORMULA:
+  👉 await page.locator("div li").first().waitFor();
+  =====================================================================
+*/
+/* 🎯 CSS STRUCTURE: UNDERSTANDING THE DESCENDANT SELECTOR ("div li")
+  =====================================================================
+  
+  1. THE FORMULA STRUCTURE:
+     👉 ParentElement Space TargetChildElement  -->  "div li"
+     
+     In CSS, a SPACE ( ) is a powerful connector. It means: 
+     "Look for the target element INSIDE or NESTED WITHIN the parent element."
+     
+  2. BREAKING DOWN "div li":
+     • div   : The starting point (The parent/ancestor container).
+     • [ ]   : The space means "go inside" or "search within the universe of this div".
+     • li    : The final target (The child/descendant element we want to find).
+     
+     So, "div li" translates to: "Find all <li> tags that live inside a <div> tag."
+
+  3. WHY WRITE THEM TOGETHER? (Scoping & Filtering):
+     - If you search globally for just "li", Playwright might find 50 list items 
+       across the whole website (in the navbar, footer, sidebar, etc.).
+     - By prefixing it with "div", we narrow down the search. We tell Playwright: 
+       "Ignore the rest of the website. Only grab the <li> items that belong to a <div> section."
+
+  4. VISUAL HTML REPRESENTATION:
+     <div>  <-- [div] Matches here first...
+         <ul>
+             <li>Item 1</li>  <-- ...then [li] finds this inside it! ✅
+             <li>Item 2</li>  <-- ...and this! ✅
+         </ul>
+     </div>
+
+  5. BONUS EXAMPLE FOR PRACTICE:
+     • ".cartSection h3" --> Find the <h3> tag inside an element with class "cartSection".
+     • "form button"     --> Find the <button> tag inside a <form> container.
+  =====================================================================
+*//* ====================================================================================================
+   🎯 PLAYWRIGHT COMPREHENSIVE LECTURE STUDY GUIDE: LOCATORS, SELECTORS, & ADVANCED TIMING MECHANISMS
+   ====================================================================================================
+   
+   SECTION 1: TEST EXECUTION, DEBUGGING & HISTORICAL FLAKINESS FIXES
+   ----------------------------------------------------------------------------------------------------
+   1. Visual Inspection with 'page.pause()':
+      - When writing a test without assertions initially, the browser closes almost instantly upon completion.
+      - To inspect the UI state (e.g., verifying if the cart counter changed from 0 to 1), 'page.pause()' 
+        is temporarily inserted to halt execution and keep the browser open.
+        
+   2. The Flakiness of 'networkidle':
+      - Relying solely on page.waitForLoadState("networkidle") can be unstable under heavy server traffic.
+      - Even if network calls finish, heavy assets (like product images) might still delay the rendering of cards.
+      - If the test attempts to count titles before full rendering, it returns 0 elements and fails.
+      - FIX: Explicitly wait for a specific element to load (e.g., the first card body or title) using '.waitFor()' 
+        before performing actions or gathering array data.
+
+   SECTION 2: DASHBOARD TO CART NAVIGATION (REGULAR EXPRESSION ATTRIBUTE SELECTORS)
+   ----------------------------------------------------------------------------------------------------
+   1. The Single Page Application (SPA) Attribute - 'routerlink':
+      - The application is built with Angular, using 'routerlink' attributes for instant, seamless page switches.
+      
+   2. CSS Wildcard / Regular Expression Match:
+      - Selector Syntax: [attribute*='partial-value']
+      - Code Used: page.locator("[routerlink*='cart']")
+      - Explanation: The asterisk (*) acts as a wildcard meaning "contains". Instead of writing the complete 
+        path (e.g., '/dashboard/cart'), we match any element whose 'routerlink' value contains the word 'cart'. 
+        This is a highly reliable way to find a unique navigation element without hardcoding long paths.
+
+   SECTION 3: THE CART VERIFICATION & THE DYNAMIC TEXT CONFLICT PROBLEM
+   ----------------------------------------------------------------------------------------------------
+   1. The Danger of Blind Text Matching ('text=value'):
+      - Using a global text locator like page.locator("text=ZARA COAT 3") creates a race condition during page transitions.
+      - Because "ZARA COAT 3" exists on BOTH the dashboard and the cart page, if Playwright checks for visibility 
+        too fast (before the cart page fully loads), it might mistakenly find the text on the OLD dashboard page. 
+        This creates a false-positive test result.
+        
+   2. Resolving Conflicts via Tag-Scoped Pseudo-Classes:
+      - Selector Syntax: "tag:has-text('value')"
+      - Code Used: page.locator(`h3:has-text("${productName}")`)
+      - Explanation: On the dashboard page, the product name is wrapped in a bold <b> tag. On the cart page, 
+        it is wrapped in a heading <h3> tag. By forcing Playwright to look strictly for an <h3> tag that 
+        contains the text, we eliminate any structural conflict between the two pages.
+
+   SECTION 4: ADVANCED TIMING MECHANISMS & AUTO-WAITING LIMITATIONS
+   ----------------------------------------------------------------------------------------------------
+   1. The '.isVisible()' Deficiency:
+      - Most action methods (like '.click()' or '.fill()') will automatically wait up to 30 seconds for 
+        elements to become visible, stable, and attached to the DOM.
+      - Crucial Exception: '.isVisible()' is an instantaneous check. It queries the current DOM immediately 
+        and returns a boolean ('true' or 'false') without waiting a single millisecond.
+      - Because real-world API data takes a moment to load and render rows on a new page, calling '.isVisible()' 
+        immediately after clicking the cart button will result in a premature 'false' and cause the test to fail.
+
+   2. Descendant Selectors ("div li") & Scoped Synchronizations:
+      - Structure: Separating two elements with a space ("div li") creates a descendant selector. It means: 
+        "Find all <li> tags nested anywhere inside a <div> container."
+      - The 'Strict Mode Violation' Error: When the cart contains multiple items, searching for "div li" 
+        returns an array of multiple elements (e.g., 6 matching rows). Calling '.waitFor()' directly on a 
+        multi-element locator causes Playwright to crash because it enforces strict single-element targeting.
+      - The Multi-Element Fix: Chain '.first()' to restrict the wait scope -> page.locator("div li").first().waitFor()
+      - Rationale: You do not need to wait for all 6 items individually. Since all cart data arrives from a single 
+        API response, waiting for the VERY FIRST row to render guarantees that the network transaction is finished 
+        And all remaining rows are rendering alongside it.
+
+   SECTION 5: SYNCHRONOUS ASSERTIONS (HANDLING READY DATA)
+   ----------------------------------------------------------------------------------------------------
+   1. Understanding Resolved Promises:
+      - Code Used: 
+        const prodAdded = await page.locator(`h3:has-text("${productName}")`).isVisible();
+        expect(prodAdded).toBeTruthy();
+        
+      - Explanation: The first line uses 'await', meaning the test stops until '.isVisible()' resolves and 
+        returns a raw primitive boolean value. 
+      - Because 'prodAdded' is already a fully evaluated true/false variable (not a live Promise or an active 
+        browser element), the 'expect()' assertion executes completely offline in memory. 
+      - Therefore, no 'await' is required or allowed before the 'expect()' keyword in this specific structure.
+   ====================================================================================================
+*/LEC 11 /* ====================================================================================================
+   🎯 PLAYWRIGHT COMPREHENSIVE LECTURE STUDY GUIDE: DYNAMIC DROPDOWNS & SEQUENTIAL TYPING
+   ====================================================================================================
+   
+   SECTION 1: THE CHECKOUT BUTTON & THE TEXT LOCATOR DEBATE
+   ----------------------------------------------------------------------------------------------------
+   1. The Fragility of Text Locators:
+      - Using text selectors (e.g., page.locator("text=Checkout")) is acceptable for highly standard, 
+        static corporate terms that are unlikely to change.
+      - WARNING: Do not abuse text locators across the application. If a developer updates the UI text 
+        (e.g., changing "Checkout" to "Proceed to Payment"), the text locator immediately breaks.
+        
+   2. The Custom CSS Alternative with Indexing:
+      - If you want to avoid text locators, you inspect the tag and attributes: `button[type='button']`.
+      - If this matches multiple elements (e.g., 2 elements found: "Continue Shopping" and "Checkout"):
+        👉 Use '.last()' to grab the final one: page.locator("button[type='button']").last()
+        👉 Use '.nth(1)' to grab the second element (0-indexed base).
+
+   SECTION 2: AUTO-SUGGESTION DROPDOWNS & THE LATEST API METHODS
+   ----------------------------------------------------------------------------------------------------
+   1. Static Dropdowns vs. Dynamic Inputs:
+      - Unlike standard HTML <select> tags, modern e-commerce country dropdowns are dynamic input fields. 
+        Options do not exist in the DOM until the user starts typing, triggering an internal API search.
+
+   2. The Failure of '.fill()':
+      - 'page.fill()' instantly dumps the entire string (e.g., "IND") into the input box all at once.
+      - Because it mimics a direct copy-paste rather than physical keyboard interactions, the application's 
+        'onKeyPress' or 'onChange' JavaScript listeners might not fire, preventing the suggestion popup from opening.
+
+   3. The Modern Solution: '.pressSequentially()'
+      - Note: 'page.type()' is now officially DEPRECATED by Playwright. 
+      - The modern replacement is '.pressSequentially()'. It forces Playwright to type character-by-character 
+        sequentially, inserting realistic human-like typing delays that successfully trigger dynamic UI dropdowns.
+      - Code Formula: 
+        await page.locator("[placeholder*='country']").pressSequentially("ind");
+
+   SECTION 3: DROPDOWN UI SYNCHRONIZATION & LOCATOR CHAINING
+   ----------------------------------------------------------------------------------------------------
+   1. Waiting for the Container to Exist:
+      - After typing, the popup takes milliseconds to fetch and render. You must explicitly wait for it.
+      - Code: 
+        const dropdown = page.locator(".results");
+        await dropdown.waitFor();
+
+   2. Locator Chaining (Parent-to-Child Scoping):
+      - Instead of searching the global page for buttons, we scope the locator exclusively inside the active dropdown box.
+      - Code: dropdown.locator("button") -> This isolates our search strictly to the child buttons inside '.results'.
+
+   SECTION 4: ITERATING OVER DYNAMIC ELEMENTS & THE CRITICAL WHITESPACE TRAP
+   ----------------------------------------------------------------------------------------------------
+   1. Extracting Count and Looping:
+      - We fetch the total count dynamically, then write a standard 'for' loop using '.nth(i)' to scan elements.
+      
+   2. The Developer's Hidden Space Trap (The '=== Exact Match' Conflict):
+      - In many applications, developers accidentally (or due to styling formatting) leave a leading or trailing 
+        space inside the HTML text content (e.g., " India" instead of "India").
+      - If your code checks for an exact match using: `if (text === "India")`, the test will FAIL silently because 
+        " India" (with a space) does not strictly equal "India".
+
+   3. Evaluation of Technical Solutions to Trim Spacings:
+      ❌ Bad Solution: Using JavaScript's '.includes("India")'
+         - Why? The text "India" is also a sub-string inside "British Indian Ocean Territory". 
+         - If that appears first in the loop, '.includes()' evaluates to true and prematurely clicks the WRONG option!
+      
+      ✅ Best Practice Solution 1: Include the structural space exactly in your string comparison:
+         - `if (text === " India")`
+         
+      ✅ Best Practice Solution 2: Use JavaScript's '.trim()' method to scrub away hidden leading/trailing spaces:
+         - `if (text.trim() === "India")`
+
+   4. The Loop Break Optimization:
+      - Once the desired element is found and clicked, always execute a 'break;' statement. This stops unnecessary 
+        overhead loop iterations over the remaining options, saving test execution time.
+
+   SECTION 5: CODE IMPLEMENTATION REFERENCE
+   ----------------------------------------------------------------------------------------------------
+   const productName = "ZARA COAT 3";
+   
+   // 1. Navigate to checkout page
+   await page.locator("text=Checkout").click();
+
+   // 2. Locate country field and type character-by-character
+   await page.locator("[placeholder*='country']").pressSequentially("ind");
+
+   // 3. Define and wait for the dynamic dropdown layout to load
+   const dropdown = page.locator(".results");
+   await dropdown.waitFor();
+
+   // 4. Extract total dynamic count
+   const optionsCount = await dropdown.locator("button").count();
+
+   // 5. Loop, evaluate text, handle spaces, click, and break
+   for (let i = 0; i < optionsCount; i++) {
+       const text = await dropdown.locator("button").nth(i).textContent();
+       
+       if (text.trim() === "India") {
+           await dropdown.locator("button").nth(i).click();
+           break; 
+       }
+   }
+
+   // 6. Visual verification breakpoint before completion
+   await page.pause();
+   ====================================================================================================
+*//* ====================================================================================
+   🎯 PLAYWRIGHT END-TO-END EXPRESS REFERENCE GUIDE
+   ====================================================================================
+   💡 GENERAL ARCHITECTURE SUMMARY:
+   1. AUTHENTICATION : Logs into the Client App using unique ID selectors.
+   2. SYNC GATEWAY   : Dual-layer waiting (Network state + First element rendering).
+   3. DOM SCANNING   : Dynamically loops through container cards to locate target product.
+   4. CART & FORM    : Utilizes advanced attribute matching and dynamic text filters.
+   5. HISTORY AUDIT  : Verifies orders by tracing dynamically generated IDs across tables.
+   ==================================================================================== */
+
+const { test, expect } = require("@playwright/test"); 
+
+test.only("Client App Testing", async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const myMail = "mostafaelhussien@gmail.com";
+    const productName = "ZARA COAT 3";
+
+    /* --------------------------------------------------------------------------------
+       🔍 SELECTORS SECTION 1: LOGIN PAGE IDENTIFIERS
+       -------------------------------------------------------------------------------- */
+
+    // 🆔 [SELECTOR]: "#userEmail" & "#userPassword" & "#login"
+    // 📝 TYPE: ID Selector (Targets the 'id' attribute via '#' symbol)
+    // ⚙️ WHY: The most stable and high-priority selector type because IDs must be unique in HTML.
+    const email = page.locator("#userEmail");
+    const password = page.locator("#userPassword");
+    const login = page.locator("#login");
+
+    // 👨‍👦 [SELECTOR]: ".card-body b"
+    // 📝 TYPE: Descendant CSS Selector (Class name -> space -> Tag name)
+    // ⚙️ WHY: Finds the parent container with class '.card-body' and reaches inside to grab the '<b>' tag holding the text.
+    const cardTitles = page.locator(".card-body b");
+
+    // 🏷️ [SELECTOR]: ".card-body"
+    // 📝 TYPE: Class Selector (Targets the 'class' attribute via '.' symbol)
+    // ⚙️ WHY: Captures the entire product card boundary box. Used here to count and loop through items.
+    const products = page.locator(".card-body");
+
+    // --- EXECUTE LOGIN ---
+    await page.goto("https://rahulshettyacademy.com/client/#/auth/login");
+    await email.fill(myMail);
+    await password.fill("Servicedesk@L9");
+    await login.click();
+
+    /* --------------------------------------------------------------------------------
+       ⏳ SYNCHRONIZATION & PRODUCT SELECTION FLOW
+       -------------------------------------------------------------------------------- */
+
+    // ⚡ SYNC 1: Wait for network to go silent. (Flaky if background APIs/Analytics keep firing).
+    await page.waitForLoadState("networkidle");
+
+    // ⚡ SYNC 2 (Safety Net): Wait specifically for the first card text node to render before calling .allTextContents().
+    await cardTitles.first().waitFor();
+
+    const allTitles2 = await cardTitles.allTextContents();
+    console.log(allTitles2);
+
+    // --- LOOP THROUGH PRODUCT CARDS ---
+    const count = await products.count();
+    for (let i = 0; i < count; i++) {
+        // 🔗 CHAINING: products.nth(i).locator("b") scopes research strictly inside the current index card.
+        if (await products.nth(i).locator("b").textContent() === productName) {
+            
+            // 文字 [SELECTOR]: "text=Add To Cart"
+            // 📝 TYPE: Playwright Text Selector Engine
+            // ⚙️ WHY: Matches the element displaying this exact string to the user. Fast and human-readable.
+            await products.nth(i).locator("text=Add To Cart").click();
+            break;
+        }
+    }
+
+    /* --------------------------------------------------------------------------------
+       🛒 SELECTORS SECTION 2: CART & CHECKOUT MANAGEMENT
+       -------------------------------------------------------------------------------- */
+
+    // 🎭 [SELECTOR]: "[routerlink*='cart']"
+    // 📝 TYPE: Substring Attribute Selector ('*=' means "Contains")
+    // ⚙️ WHY: Finds any element containing the keyword 'cart' inside its 'routerlink' property. Prevents breakage if routing changes.
+    await page.locator("[routerlink*='cart']").click();
+
+    // 👨‍👦 [SELECTOR]: "div li"
+    // 📝 TYPE: Standard Tag Descendant Selector
+    // ⚙️ WHY: Targets list tags ('<li>') nested directly or indirectly inside division boxes ('<div>').
+    await page.locator("div li").first().waitFor();
+
+    // 🧪 [SELECTOR]: `h3:has-text("${productName}")`
+    // 📝 TYPE: Playwright Pseudo-Class Text Engine with JS Template Literal Variables
+    // ⚙️ WHY: Dynamic matching. It builds a selector on-the-fly checking if an '<h3>' tag contains the string variable.
+    const prodAdded = await page.locator(`h3:has-text("${productName}")`).isVisible();
+    expect(prodAdded).toBeTruthy(); 
+
+    // 文字 [SELECTOR]: "text=Checkout" -> Locates the checkout submission button by its visible text.
+    await page.locator("text=Checkout").click();
+
+    // 🎭 [SELECTOR]: "[placeholder*='Country']"
+    // 📝 TYPE: Substring Attribute Selector targeting the visible field placeholder text.
+    await page.locator("[placeholder*='Country']").pressSequentially("eg", { delay: 100 });
+
+    // 🏷️ [SELECTOR]: ".ta-results"
+    // 📝 TYPE: Class Selector matching the wrapper element of the dynamic search dropdown menu.
+    const dropDown = page.locator(".ta-results");
+    await dropDown.waitFor();
+
+    const optionsCount = await dropDown.locator("button").count();
+    for (let i = 0; i < optionsCount; i++) {
+        const searchResults = await dropDown.locator("button").nth(i).textContent();
+        if (searchResults.trim() === "Egypt") {
+            await dropDown.locator("button").nth(i).click();
+            break;
+        }
+    }
+
+    /* --------------------------------------------------------------------------------
+       🏁 SELECTORS SECTION 3: CONFIRMATION & ORDER HISTORY LOOKUP
+       -------------------------------------------------------------------------------- */
+
+    // 🎛️ [SELECTOR]: ".user__name [type='text']"
+    // 📝 TYPE: Combined Class & Attribute Filter Selector
+    // ⚙️ WHY: Finds the parent with class '.user__name' and gets the child input box explicitly defined as a text field.
+    // ⚠️ CRITICAL ASSET RULE: Input tags hold data inside the 'value' attribute. Change .toHaveText() to .toHaveValue() to avoid failures.
+    await expect(page.locator(".user__name [type='text']").first()).toHaveValue(myMail);
+
+    // 🏷️ [SELECTOR]: ".action__submit" -> Class selector targeting the order checkout action container.
+    await page.locator(".action__submit").click();
+
+    // 🏷️ [SELECTOR]: ".hero-primary" -> Class selector targeting the primary success header message element.
+    await expect(page.locator(".hero-primary")).toHaveText(" Thankyou for the order. ");
+
+    // 👨‍👦 [SELECTOR]: ".em-spacer-1 .ng-star-inserted"
+    // 📝 TYPE: Nested Class Selector Hierarchy
+    // ⚙️ WHY: Isolates the inner Angular dynamically injected element (carrying the Order ID text) inside the spacing box.
+    const orderId = await page.locator(".em-spacer-1 .ng-star-inserted").textContent();
+    console.log(orderId);
+
+    // 🎭 [SELECTOR]: "button[routerlink*='myorders']"
+    // 📝 TYPE: Combined Tag name and Substring Attribute Match Selector. Ensures exact targeting of the history navigation action.
+    await page.locator("button[routerlink*='myorders']").click();
+
+    // 🏷️ [SELECTOR]: "tbody" -> Structural Table Body Tag Selector. Used to verify the mounting framework of data grids.
+    await page.locator("tbody").waitFor();
+
+    // 👨‍👦 [SELECTOR]: "tbody tr"
+    // 📝 TYPE: Table Row Tag Descendant Selector
+    // ⚙️ WHY: Captures every single data row entry (`<tr>`) present inside the body block of the log grid.
+    const rows = page.locator("tbody tr");
+    const rowsCount = await rows.count();
+
+    for (let i = 0; i < rowsCount; i++) {
+        const myOrderId = await rows.nth(i).locator("th").textContent();
+        if (orderId.includes(myOrderId)) {
+            console.log("Order Found");
+            await rows.nth(i).locator("button").first().click();
+            break;
+        }
+    }
+
+    // 🏷️ [SELECTOR]: ".col-text"
+    // 📝 TYPE: Class Selector targeting the order metadata textual row wrapper on the summary overview page.
+    const orderDetails = await page.locator(".col-text").textContent();
+    expect(orderId.includes(orderDetails)).toBeTruthy();
+});
+------------------------------------------------------------------------------------------------------
+/* ====================================================================================
+   🎯 LECTURE 12: PLAYWRIGHT EXCLUSIVE SPECIAL LOCATORS & UI RUNNER
+   ====================================================================================
+   📖 QUICK SUMMARY:
+   - Playwright has unique, built-in semantic locators that mimic how real users see pages.
+   - We learn how to use `getByLabel()`, `.check()`, and `.selectOption()`.
+   - We introduce the official graphical Test Runner using the `--ui` command flag.
+   ==================================================================================== */
+
+const { test, expect } = require("@playwright/test");
+
+test("Playwright Special Locators", async ({ page }) => {
+    
+    // 🌐 Step 1: Navigate to the practice page
+    await page.goto("https://rahulshettyacademy.com/angularpractice/");
+
+    /* --------------------------------------------------------------------------------
+       🔍 DEEP DIVE: SPECIAL SELECTORS USED IN THIS LECTURE
+       -------------------------------------------------------------------------------- */
+
+    // 1️⃣ SELECTOR: Checkbox Selection
+    // 🏷️ CODE: page.getByLabel("Check me if you love ice cream")
+    // 📝 HOW IT WORKS: Playwright looks for a <label> tag containing this exact text, 
+    //    then automatically targets the checkbox linked to it.
+    // ⚡ ACTION METHOD: `.check()` -> A special method for checkboxes/radio buttons. 
+    //    It safely ensures the element is ticked (checked).
+    await page.getByLabel("Check me if you love ice cream").check();
+
+
+    // 2️⃣ SELECTOR: Radio Button Selection
+    // 🏷️ CODE: page.getByLabel("Employed")
+    // 📝 HOW IT WORKS: Finds the radio option linked with the text label "Employed".
+    // ⚡ ACTION METHOD: `.check()` or `.click()` both work perfectly here.
+    await page.getByLabel("Employed").check();
+
+/* ====================================================================
+   ⚠️ CRITICAL RULE: getByLabel() for Selection vs Typing
+   ====================================================================
+   📌 WHAT IS A LABEL?
+   - It is the text title (e.g., "Password") visible on the screen.
+   - In HTML, it must be linked to the <input> box using 'id' and 'for'.
+
+   ✅ BEST FOR SELECTION (Stable 100%):
+   - Use with: Checkboxes, Radio Buttons, and Dropdowns.
+   - Actions: .check() or .selectOption().
+   - Why: The browser easily links the label text to the selection action.
+
+   ❌ RISKY FOR TYPING (Flaky / Flickering):
+   - Avoid with: Text fields, Passwords, and Emails.
+   - Action: .fill().
+   - Why: If developers forget to link the <label> to the <input> in HTML,
+     Playwright will find the text but cannot type inside the empty box.
+
+   💡 BEST PRACTICE: For typing fields, always use ID (#id) or Placeholder.
+   ==================================================================== */
+
+    // 3️⃣ SELECTOR: Dropdown Selection
+    // 🏷️ CODE: page.getByLabel("Gender")
+    // 📝 HOW IT WORKS: Finds the <select> tag element associated with the "Gender" label.
+    // ⚡ ACTION METHOD: `.selectOption("Female")` -> Exclusive method for HTML <select> tags. 
+    //    You pass the exact text value you want to select from the dropdown.
+    await page.getByLabel("Gender").selectOption("Female");
+
+    /* --------------------------------------------------------------------------------
+       ⚠️ IMPORTANT CRITICAL WARNING FROM THE INSTRUCTOR:
+       --------------------------------------------------------------------------------
+       - `getByLabel()` is stable and excellent for: Checkboxes, Radio Buttons, and Dropdowns.
+       - `getByLabel()` can be flaky/inconsistent for: Text Input Fields (where you type).
+       - Rule of thumb: If you need to fill text, prefer other locators if getByLabel flickers.
+       -------------------------------------------------------------------------------- */
+});
+
+/* ====================================================================================
+   🛠️ NEW TOOL INTRODUCED: PLAYWRIGHT UI TEST RUNNER
+   ====================================================================================
+   💻 THE COMMAND: 
+   npx playwright test --ui
+
+   💡 WHAT IS IT & WHY IS IT COOL?
+   1. Graphical Interface (GUI): Opens a clean visual window showing all your test files.
+   2. One-Click Run: You can click the "Play" icon on any test to run it instantly.
+   3. Visual Timeline & Screenshots: Shows a step-by-step trace of your test. 
+      When you hover over any line of code, it highlights the action on a real screenshot!
+   4. Time Saver: Much faster for debugging compared to running long terminal commands.
+   ==================================================================================== */
+   LEC 13 /* ====================================================================================
+   🎯 LECTURE 2: ADVANCED PLAYWRIGHT LOCATORS & METHOD CHAINING
+   ====================================================================================
+   📖 QUICK SUMMARY:
+   - We learn 3 new locators: `getByPlaceholder()`, `getByRole()` for links, and `getByText()`.
+   - We learn how to use `.filter()` to handle lists of elements.
+   - We combine everything in a single powerful line using "Method Chaining".
+   ==================================================================================== */
+/* ====================================================================================
+   🧠 THE ULTIMATE MEMORY GUIDE: PLAYWRIGHT 'getBy' LOCATORS CHEAT SHEET
+   ====================================================================================
+   📌 RULE OF THUMB: Playwright recommends these because they mimic real user behavior.
+   ==================================================================================== */
+
+const { test, expect } = require("@playwright/test");
+
+test("Mastering All Playwright getBy Locators", async ({ page }) => {
+    
+    await page.goto("https://rahulshettyacademy.com/angularpractice/");
+
+    // 1️⃣ 🏷️ getByLabel()
+    // 🔹 WHEN TO USE: Best for Checkboxes, Radio Buttons, and Dropdowns.
+    // 💡 MEMORY TRICK: Use it when a text title is visually linked to a choice option.
+    // ❌ AVOID WITH: Input text fields (can be flaky if HTML structure is poor).
+    await page.getByLabel("Check me if you love ice cream").check();
+
+
+    // 2️⃣ 📥 getByPlaceholder()
+    // 🔹 WHEN TO USE: Best for Input Text Fields (Login, Search, Forms).
+    // 💡 MEMORY TRICK: Use it when you see gray hint text inside an empty box before typing.
+    // 📝 HTML LOOKS LIKE: <input placeholder="Enter your password">
+    await page.getByPlaceholder("Password").fill("Secret123");
+
+
+    // 3️⃣ 🎭 getByRole()
+    // 🔹 WHEN TO USE: Best for Buttons, Links, Headings, and Checkboxes.
+    // 💡 MEMORY TRICK: Use it to find a specific semantic element by its function + visible text name.
+    // 📝 HTML LOOKS LIKE: <button>Submit</button> or <a href="...">Shop</a>
+    await page.getByRole("button", { name: "Submit" }).click();
+    await page.getByRole("link", { name: "Shop" }).click();
+
+
+    // 4️⃣ 🔤 getByText()
+    // 🔹 WHEN TO USE: Best for Assertions, Labels, Paragraphs, and Validation Messages.
+    // 💡 MEMORY TRICK: Use it when you want to find an element solely by the visible text it contains.
+    // 📝 HTML LOOKS LIKE: <div>Success! Form submitted.</div>
+    await expect(page.getByText("Success! The form has been submitted successfully.")).toBeVisible();
+
+
+    // 5️⃣ 🖼️ getByAltText()
+    // 🔹 WHEN TO USE: Best for Images and Icons.
+    // 💡 MEMORY TRICK: Use it when you need to interact with or verify a picture that has a description.
+    // 📝 HTML LOOKS LIKE: <img alt="Company Logo" src="...">
+    await expect(page.getByAltText("Company Logo")).toBeVisible();
+
+
+    // 6️⃣ 📌 getByTitle()
+    // 🔹 WHEN TO USE: Best for Tooltips or Extra Information popups.
+    // 💡 MEMORY TRICK: Use it when hovering over an element shows a small text hint.
+    // 📝 HTML LOOKS LIKE: <span title="More info">ℹ️</span>
+    await page.getByTitle("More info").click();
+
+
+    // 7️⃣ 🆔 getByTestId()
+    // 🔹 WHEN TO USE: The Ultimate Backup / Best for Dedicated Automation IDs.
+    // 💡 MEMORY TRICK: Use it when the app has special QA attributes added by developers.
+    // 📝 HTML LOOKS LIKE: <button data-testid="submit-login-btn">
+    await page.getByTestId("submit-login-btn").click();
+
+});
+    
+});
+
+/* ====================================================================================
+   ⚙️ INDUSTRY BEST PRACTICE DISCUSSION:
+   ====================================================================================
+   - Companies often choose ONE standard strategy to keep code clean and consistent.
+   - Standard approach: Many frameworks strictly use CSS Selectors via `page.locator()`.
+   - Playwright approach: These user-facing special locators are highly recommended by 
+     Playwright creators because they test what the real user actually sees on screen.
+   ==================================================================================== */
+   LEC 14 /* ====================================================================================
+   🎯 UNDERSTANDING 'getByLabel()' ASSOCIATION RULES (WHY IT FAILS SOMETIMES)
+   ====================================================================================
+   📖 THE CORE RULE: 
+   Playwright does NOT just look for text near a box. It strictly checks if the 
+   <label> tag is technically LINKED to the <input> tag in the HTML structure.
+   ==================================================================================== */
+
+// 🟢 CASE 1: WRAPPING / NESTING (✅ WORKS PERFECTLY)
+// Why it works: The <input> box is literally inside (wrapped by) the <label> tags.
+// Playwright automatically knows this label belongs to this specific box.
+/* HTML Example:
+   <label>
+       Password:
+       <input type="password" />
+   </label>
+   
+   Playwright Code:
+   await page.getByLabel("Password").fill("12345");
+*/
+
+
+// 🟢 CASE 2: MATCHING 'for' AND 'id' ATTRIBUTES (✅ WORKS PERFECTLY)
+// Why it works: The label has a 'for' attribute that EXACTLY matches the 'id' of the input.
+// This creates a hidden electronic bridge/link between them.
+/* HTML Example:
+   <label for="user-password-box">Password</label>
+   <input type="password" id="user-password-box" />
+   
+   Playwright Code:
+   await page.getByLabel("Password").fill("12345");
+*/
+
+
+// 🔴 CASE 3: MISMATCH OR NO LINKAGE (❌ FAILS!)
+// Why it fails: The 'for' attribute and the 'id' attribute do NOT match! 
+// To a real user, the text "Email" is next to the box. But to Playwright, they are strangers.
+/* HTML Example:
+   <label for="email">Email</label>
+   <input type="text" id="userEmail" />    <-- Look here! 'email' does NOT match 'userEmail'
+   
+   Playwright Code (This will CRASH):
+   await page.getByLabel("Email").fill("test@test.com"); 
+*/
+
+
+// 💡 THE BACKUP PLAN (WHAT TO DO IF 'getByLabel' FAILS):
+// If the developer messed up the label connection, and you don't want to write CSS selectors,
+// look for a "placeholder" attribute instead and switch your method!
+/* HTML Example:
+   <label for="email">Email</label>
+   <input type="text" id="userEmail" placeholder="email@example.com" />
+   
+   Playwright Code (The smart backup):
+   await page.getByPlaceholder("email@example.com").fill("test@test.com");
+*/
+
+/* ====================================================================================
+   💡 SUMMARY TO MEMORIZE:
+   Before using `getByLabel()`, inspect the element! 
+   Make sure either:
+   1. The <input> is INSIDE the <label>.
+   2. The <label for="..."> matches the <input id="...">.
+   If neither is true, use `getByPlaceholder()` as your superhero backup!
+   ==================================================================================== */
+   LEC 15 and 16 
+   /*
+===========================================================================
+SUMMARY OF CALENDAR HANDLING & VALIDATION (LECTURES 1 & 2)
+===========================================================================
+
+PART 1: CALENDAR NAVIGATION & SELECTORS LOGIC
+-----------------------------------------------
+1. Open Calendar:
+   - Selector: ".react-date-picker__inputGroup" (CSS Class)
+   - Reason: Clicks the whole input container box to open the dropdown overlay.
+   
+2. Zoom Out View (Two Clicks):
+   - Selector: ".react-calendar__navigation__label" (CSS Class)
+   - Reason: Clicks the top header button twice to zoom out the view.
+     * 1st Click: Changes view from Days -> Months
+     * 2nd Click: Changes view from Months -> Years (Decade Grid)
+   
+3. Select Year:
+   - Locator: page.getByText(year) (Playwright Text Locator)
+   - Reason: Dynamically searches the screen for the target year string (e.g. "2026") and clicks it.
+   
+4. Select Month:
+   - Selector: ".react-calendar__year-view__months__month" (CSS Class)
+   - Logic: This class returns an array of all 12 month buttons. 
+     * JavaScript arrays are 0-indexed (January = 0, February = 1 ... July = 6).
+     * Formula: We use '.nth(Number(month) - 1)' to click the correct index (e.g., Month 7 - 1 = Index 6).
+
+5. Select Day:
+   - Selector: "//abbr[text()='" + day + "']" (Dynamic XPath)
+   - Formula: //tagname[text()='value']
+   - Reason: Specifically targets an <abbr> tag with the exact day text to avoid clicking any duplicate numbers on the page.
+
+
+PART 2: ASSERTION & VERIFICATION LOGIC
+----------------------------------------
+1. Expected Data Array:
+   - "const expectedValues = [month, day, year]" stores our test inputs in a list.
+
+2. Grouping Input Elements:
+   - Selector: ".react-date-picker__inputGroup__input" (Single Specific Class)
+   - Remember the '__' Trick: 
+     * The double underscore '__input' is just a web naming style. It is ONE single class name.
+     * Why not use a space? Using a space (".inputGroup input") is a Parent-to-Child selector, 
+       but it accidentally catches 4 elements (including 1 hidden element) and breaks our test.
+     * This specific class catches EXACTLY the 3 visible input boxes (Month, Day, Year).
+
+3. The Validation Loop:
+   - Uses a 'for' loop to iterate through the 3 input fields.
+   - Method: Uses '.inputValue()' to pull the dynamic text inside each input box.
+   - Note: We CANNOT use '.textContent()' here because the values are dynamic input data, not static HTML text.
+   - Assertion: 'expect(actualValue).toEqual(expectedValues[i])' verifies the UI matches our parameters.
+===========================================================================
+*/

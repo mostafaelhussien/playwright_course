@@ -1,0 +1,136 @@
+/* ====================================================================================================
+   🔥 THE ULTIMATE PLAYWRIGHT SELECTOR MASTER REFERENCE FILE
+   ====================================================================================================
+   CORE PHILOSOPHY: Do not memorize syntax. Understand the HTML structure, evaluate uniqueness, 
+   and apply the priority flow below.
+   
+   ====================================================================================================
+   PART 1: THE 4 CORE SELECTOR FAMILIES (With HTML Snippets)
+   ====================================================================================================
+   
+   ----------------------------------------------------------------------------------------------------
+   🥇 PRIORITY 1: USER-FACING LOCATORS (Playwright Best Practice)
+   ----------------------------------------------------------------------------------------------------
+   👉 WHEN TO USE: Whenever possible! It mimics real human interaction and doesn't break when CSS changes.
+   
+   A. getByRole()
+      • HTML   : <button class="btn btn-dark">Login Here</button>
+      • Code   : page.getByRole("button", { name: "Login Here" })
+      
+   B. getByPlaceholder()
+      • HTML   : <input type="password" placeholder="Enter your secret pass">
+      • Code   : page.getByPlaceholder("Enter your secret pass")
+      
+   C. getByText()
+      • HTML   : <p>Welcome back, John Doe</p>
+      • Code   : page.getByText("Welcome back, John Doe")
+
+   ----------------------------------------------------------------------------------------------------
+   🥈 PRIORITY 2: THE STANDARD CSS FAMILY (The Structural Code Blocks)
+   ----------------------------------------------------------------------------------------------------
+   👉 WHEN TO USE: When an element doesn't have a unique visible role/text, but has clean HTML code attributes.
+   
+   A. ID Selector (#) -> [Highest Technical Priority - Always unique]
+      • HTML   : <input id="user-email-field">
+      • Code   : page.locator("#user-email-field")
+      
+   B. Class Selector (.) -> [Matches styling classes]
+      • HTML   : <div class="cart-items-wrapper">
+      • Code   : page.locator(".cart-items-wrapper")
+      
+   C. Attribute Selector ([attr='value']) -> [Excellent for Angular/React custom tags]
+      • HTML   : <button routerlink="/dashboard/cart">Go to Cart</button>
+      • Code   : page.locator("[routerlink*='cart']") // *= means wildcard "contains"
+
+   ----------------------------------------------------------------------------------------------------
+   🥉 PRIORITY 3: SCROLL-TEXT & PSEUDO-CLASSES (Dynamic Text Filtering)
+   ----------------------------------------------------------------------------------------------------
+   👉 WHEN TO USE: When elements have the exact same HTML tag/class, but different inner visible text.
+   
+   A. Tag + Text Filter (:has-text()) -> [Prevents page-to-page duplication conflicts]
+      • HTML   : <h3 class="title">ZARA COAT 3</h3>
+      • Code   : page.locator("h3:has-text('ZARA COAT 3')")
+
+   ----------------------------------------------------------------------------------------------------
+   🏅 PRIORITY 4: XPATH (The Emergency Escape Hatch)
+   ----------------------------------------------------------------------------------------------------
+   👉 WHEN TO USE: Only as a final resort when there are zero IDs, classes, placeholders, or static texts.
+   
+   • HTML   : <div class="x"><span class="y"><button>Submit</button></span></div>
+   • Code   : page.locator("//div[@class='x']//button")
+
+   ====================================================================================================
+   PART 2: ADVANCED SELECTOR COMBINATIONS & ARCHITECTURE
+   ====================================================================================================
+   
+   ----------------------------------------------------------------------------------------------------
+   🧱 TYPE A: THE TAG + ATTRIBUTE COMBINATION
+   ----------------------------------------------------------------------------------------------------
+   👉 SYNTAX   : tag[attribute='value']  (Note: Absolutely NO SPACES between tag and bracket)
+   👉 EXAMPLE  : page.locator("button[type='button']")
+   
+   ❓ WHEN TO USE IT:
+      When a broad tag or a broad attribute returns too many global matches, you merge them to filter.
+      
+   🔍 HOW IT WORKS (The HTML Filter Logic):
+      If you look for "button" -> Returns 10 items.
+      If you look for "[type='button']" -> Returns 8 items.
+      But "button[type='button']" -> Filters and says: "Must be a <button> tag AND must have type='button'".
+      This slashes the results down instantly (e.g., down to 2 matches).
+      
+   💡 HANDLING INDEXES: If it still returns 2 matches, isolate using:
+      • .first() -> Grabs index 0
+      • .last()  -> Grabs the final matching element
+      • .nth(1)  -> Grabs specific index (0-indexed)
+
+   ----------------------------------------------------------------------------------------------------
+   🌌 TYPE B: THE DESCENDANT SELECTOR (The Parent-Child Space)
+   ----------------------------------------------------------------------------------------------------
+   👉 SYNTAX   : ParentElement SPACE ChildTargetElement
+   👉 EXAMPLE  : page.locator("div li")
+   
+   ❓ WHEN TO USE IT:
+      When your target element (like an 'li' or an 'h3') is generic and exists everywhere on the web page, 
+      but it lives inside a specific safe zone (a Parent Container).
+      
+   🔍 HOW IT WORKS (The HTML Nesting Logic):
+      The SPACE ( ) tells Playwright: "Enter inside the Parent boundary, then search within its universe."
+      • HTML:
+        <div class="cart-box">   <-- Playwright locks onto this <div> first
+            <ul>
+                <li>Item 1</li>  <-- Then digs deep to find this <li> inside it ✅
+            </ul>
+        </div>
+
+   ----------------------------------------------------------------------------------------------------
+   🔗 TYPE C: LOCATOR CHAINING (Sequential Filtering)
+   ----------------------------------------------------------------------------------------------------
+   👉 SYNTAX   : page.locator("Parent").locator("Child")
+   👉 EXAMPLE  : page.locator(".results-dropdown").locator("button")
+   
+   ❓ WHEN TO USE IT:
+      Crucial for Dynamic Dropdowns and elements rendered via APIs. You assign the parent to a variable, 
+      synchronize (wait for it), and then query underneath it.
+      
+   🔍 HOW IT WORKS (The JavaScript Scoping Logic):
+      1. const dropdown = page.locator(".results-dropdown");
+      2. await dropdown.waitFor();  <-- Forces synchronization until API data renders.
+      3. const optionsCount = await dropdown.locator("button").count(); <-- Loops over safe internal items only.
+
+   ====================================================================================================
+   PART 3: THE IMPLICIT ARIA ROLES SHEET (How to predict getByRole)
+   ====================================================================================================
+   Playwright roles are standard W3C Accessibility terms (what screen-readers read aloud).
+   
+   • <a> Tag               ----> Role: "link"
+   • <button> Tag          ----> Role: "button"
+   • <h1>, <h2>, <h3>      ----> Role: "heading"
+   • <input type="text">   ----> Role: "textbox"
+   • <input type="checkbox">---> Role: "checkbox"
+   • <select> Tag          ----> Role: "combobox"
+   • <table class="...">    ----> Role: "table"
+
+   💡 TRICK OF THE TRADE: If you're unsure of a role, write a fake one: page.getByRole("nonsense").
+   Playwright will crash intentionally and log a gorgeous manifest of every valid role present on that page!
+   ====================================================================================================
+*/
